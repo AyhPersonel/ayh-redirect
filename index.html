@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atatürk Yüzme Havuzu - Yönlendiriliyor</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: #0b1b33;
+    color: #eaf1fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .kutu { max-width: 360px; }
+  .baslik { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .durum { font-size: 14px; opacity: 0.8; }
+  .hata { color: #ff8080; margin-top: 16px; }
+  a.manuel { color: #7fb7ff; }
+</style>
+</head>
+<body>
+  <div class="kutu">
+    <div class="baslik">Atatürk Yüzme Havuzu</div>
+    <div class="durum" id="durum">Yönlendiriliyor, lütfen bekleyin...</div>
+  </div>
+
+<script>
+// Bu sayfa hiç değişmez; sadece o anki gerçek tünel adresini
+// current-url.json dosyasından okuyup kullanıcıyı oraya yönlendirir.
+// Kartların üzerindeki QR bu sabit sayfayı gösterir, değişen adres
+// sadece bu json dosyasında güncellenir.
+
+const JSON_ADRESI =
+  "https://raw.githubusercontent.com/KULLANICI_ADINIZ/ayh-redirect/main/current-url.json";
+
+const durumEl = document.getElementById("durum");
+const params = new URLSearchParams(window.location.search);
+// Kartlardaki QR şu formatta olmalı:
+//   https://KULLANICI_ADINIZ.github.io/ayh-redirect/?k=<token>
+// Personel kimlik kartı ve bölge QR'ları için token aynı ?k= parametresiyle taşınır.
+const token = params.get("k");
+
+fetch(JSON_ADRESI + "?_=" + Date.now(), { cache: "no-store" })
+  .then(function (r) {
+    if (!r.ok) throw new Error("json okunamadı");
+    return r.json();
+  })
+  .then(function (veri) {
+    let hedef = veri.base_url;
+    if (!hedef) throw new Error("base_url boş");
+    hedef = hedef.replace(/\/+$/, "");
+    if (token) {
+      hedef += "/k/" + encodeURIComponent(token);
+    }
+    window.location.replace(hedef);
+  })
+  .catch(function (err) {
+    durumEl.innerHTML =
+      'Şu anda sisteme ulaşılamıyor.<br>Lütfen birkaç dakika sonra tekrar deneyin ' +
+      'veya görevlinizle iletişime geçin.';
+    durumEl.classList.add("hata");
+  });
+</script>
+</body>
+</html>
